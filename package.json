@@ -17,7 +17,7 @@
   "author": "Jenish",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.0.1",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
@@ -27,7 +27,14 @@
     "mongoose": "^6.2.5",
     "multer": "^1.4.4",
     "nodemon": "^2.0.15",
-    "validate-phone-number-node-js": "^0.0.1",
     "validator": "^13.7.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/developerdesigner18/super-vikinger-backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/developerdesigner18/super-vikinger-backend/issues"
+  },
+  "homepage": "https://github.com/developerdesigner18/super-vikinger-backend#readme"
 }

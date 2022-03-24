@@ -61,6 +61,26 @@ const User = new mongooes.Schema(
     language: {
       type: String,
     },
+    recoveryEmail: {
+      type: String,
+    },
+    recoveryPhone: {
+      type: String,
+    },
+    securityInfo: [
+      {
+        questionOne: String,
+        answerOne: String,
+      },
+      {
+        questionTwo: String,
+        answerTwo: String,
+      },
+      {
+        questionThree: String,
+        answerThree: String,
+      },
+    ],
   },
   {
     timestamps: true,

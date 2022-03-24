@@ -5,8 +5,9 @@ module.exports = (app) => {
   app.get("/", (req, res) => {
     res.status(200).send("Lau - API");
   });
-  app.use("/user/Register", User.register);
-  app.use("/user/Login", User.login);
-  app.use("/user/profileInfo", uploadMultiple, verifyToken, User.profileInfo);
-  app.use("/user/accountInfo", verifyToken, User.accountInfo);
+  app.get("/user", verifyToken, User.userData);
+  app.post("/user/Register", User.register);
+  app.post("/user/Login", User.login);
+  app.post("/user/profileInfo", uploadMultiple, verifyToken, User.profileInfo);
+  app.post("/user/accountInfo", verifyToken, User.accountInfo);
 };
