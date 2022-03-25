@@ -10,4 +10,5 @@ module.exports = (app) => {
   app.post("/user/Login", User.login);
   app.post("/user/profileInfo", uploadMultiple, verifyToken, User.profileInfo);
   app.post("/user/accountInfo", verifyToken, User.accountInfo);
+  app.post("/user/changePassword", verifyToken, User.changePassword);
 };

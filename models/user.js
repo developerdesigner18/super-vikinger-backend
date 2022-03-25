@@ -69,16 +69,18 @@ const User = new mongooes.Schema(
     },
     securityInfo: [
       {
-        questionOne: String,
-        answerOne: String,
-      },
-      {
-        questionTwo: String,
-        answerTwo: String,
-      },
-      {
-        questionThree: String,
-        answerThree: String,
+        questionOne: {
+          questionOne: String,
+          answerOne: String,
+        },
+        questionTwo: {
+          questionTwo: String,
+          answerTwo: String,
+        },
+        questionThree: {
+          questionThree: String,
+          answerThree: String,
+        },
       },
     ],
   },

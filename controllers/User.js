@@ -1,9 +1,10 @@
 const User = require("../models/user");
 const validator = require("validator");
-// const validatePhoneNumber = require("validate-phone-number-node-js");
 const bcrypt = require("bcryptjs");
 const config = require("../config/auth.config");
 var jwt = require("jsonwebtoken");
+const moment = require("moment");
+
 exports.register = async (req, res) => {
   try {
     console.log("ReqBody------------------", req.body);
@@ -93,6 +94,8 @@ exports.profileInfo = async (req, res) => {
       country,
       city,
     } = req.body;
+    let date = birthdate;
+
     if (!validator.isEmail(publicEmail))
       return res
         .status(400)
@@ -106,20 +109,28 @@ exports.profileInfo = async (req, res) => {
     //       "The email address you entered is already associated with another account!",
     //   });
     // }
-    // console.log(req.files, "--------------------------");
-    const avtarPath =
-      "http://localhost:8080/Avatar/" + req.files.avatar[0].filename;
-    const coverImagePath =
-      "http://localhost:8080/Cover-Image/" + req.files.coverImage[0].filename;
 
     const user = await User.findOne({ email: req.email });
+    let avtarPath, coverImagePath;
+
+    if (Object.keys(req.files).length) {
+      if (req.files.avatar) {
+        avtarPath =
+          "http://localhost:8080/Avatar/" + req.files.avatar[0]?.filename;
+      }
+      if (req.files.coverImage) {
+        coverImagePath =
+          "http://localhost:8080/Cover-Image/" +
+          req.files.coverImage[0]?.filename;
+      }
+    }
 
     if (user) {
-      user.avatar = avtarPath;
-      user.coverImage = coverImagePath;
       user.profileName = profileName;
       user.publicEmail = publicEmail;
       user.description = description;
+      user.avatar = avtarPath ? avtarPath : user.avatar;
+      user.coverImage = coverImagePath ? coverImagePath : user.coverImage;
       user.birthdate = birthdate;
       user.gender = gender;
       user.country = country;
@@ -189,16 +200,18 @@ exports.accountInfo = async (req, res) => {
       user.recoveryPhone = recoveryPhone;
       user.securityInfo = [
         {
-          questionOne: questionOne,
-          answerOne: recoveryAnswerOne,
-        },
-        {
-          questionTwo: questionTwo,
-          answerTwo: recoveryAnswerTwo,
-        },
-        {
-          questionThree: questionThree,
-          answerThree: recoveryAnswerThree,
+          questionOne: {
+            questionOne: questionOne,
+            answerOne: recoveryAnswerOne,
+          },
+          questionTwo: {
+            questionTwo: questionTwo,
+            answerTwo: recoveryAnswerTwo,
+          },
+          questionThree: {
+            questionThree: questionThree,
+            answerThree: recoveryAnswerThree,
+          },
         },
       ];
       // user.securityInfo[0].questionOne = questionOne;
@@ -217,6 +230,41 @@ exports.accountInfo = async (req, res) => {
     }
   } catch (error) {
     res.status(500).send(error);
+  }
+};
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, cnewPassword } = req.body;
+    const strongPassword = new RegExp(
+      "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+    );
+    if (!strongPassword.test(newPassword.trim())) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long with one uppercase letter, one lowercase letter, one digit, and one special character !",
+      });
+    }
+    if (newPassword !== cnewPassword) {
+      return res.status(400).json({
+        message: "New Password And Repeat Passwrod Must Be Same!",
+      });
+    }
+    const user = await User.findOne({ email: req.email });
+    const validPassword = await bcrypt.compare(
+      req.body.currentPassword,
+      user.password
+    );
+    console.log("req.email", validPassword);
+    const salt = await bcrypt.genSalt(10);
+
+    req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
+    if (validPassword) {
+      user.password = req.body.newPassword;
+      await user.save();
+      res.status(200).json({ message: "New Password Update Successfully!" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error });
   }
 };
 // --------------------------------------get-requests----------------------
