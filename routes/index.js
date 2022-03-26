@@ -11,4 +11,6 @@ module.exports = (app) => {
   app.post("/user/profileInfo", uploadMultiple, verifyToken, User.profileInfo);
   app.post("/user/accountInfo", verifyToken, User.accountInfo);
   app.post("/user/changePassword", verifyToken, User.changePassword);
+  app.post("/user/forgotPassword", verifyToken, User.passwordReset);
+  app.post("/:userId/:token", User.setNewPassword);
 };
