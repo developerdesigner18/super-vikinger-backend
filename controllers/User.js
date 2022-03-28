@@ -3,8 +3,7 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const config = require("../config/auth.config");
 var jwt = require("jsonwebtoken");
-const moment = require("moment");
-const sendEmail = require("../utils/sendEmail");
+const { sendEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
 const Token = require("../models/token");
 exports.register = async (req, res) => {
@@ -275,21 +274,22 @@ exports.passwordReset = async (req, res) => {
     if (!user) {
       return res.status(404).send("User with given email doesn't exist");
     }
-    console.log(" i am here");
     let token = await Token.findOne({ userId: user._id });
     if (!token) {
       token = await new Token({
-        userId: req.id,
+        userId: user._id,
         token: crypto.randomBytes(32).toString("hex"),
       }).save();
     }
+
     const link = `${process.env.BASEURL}/forgotPassword/${user._id}`;
-    await sendEmail(user.email, "Password Reset", link);
+
+    sendEmail(user.email, user.fullName, link);
     return res
       .status(200)
       .json({ message: "Password Reset link Sent To Your Email Account" });
   } catch (error) {
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: "error" });
   }
 };
 exports.setNewPassword = async (req, res) => {
@@ -297,28 +297,90 @@ exports.setNewPassword = async (req, res) => {
     const strongPassword = new RegExp(
       "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
     );
-    if (!strongPassword.test(req.body.resetPassword.trim())) {
+    if (!strongPassword.test(req.body.newPassword.trim())) {
       return res.status(400).json({
         message:
           "Password must be at least 8 characters long with one uppercase letter, one lowercase letter, one digit, and one special character !",
       });
     }
-    const user = User.findById(req.params.userId);
+    const user = await User.findOne({ email: req.email });
     if (!user) {
       return res.status(404).json({ message: "invalid link or expired!" });
     }
+
     const token = await Token.findOne({
-      userId: user._id,
-      token: req.params.token,
+      userId: req.userId,
     });
+
     if (!token)
       return res.status(404).json({ message: "invalid link or expired!" });
-    user.password = req.bod.password;
+    const salt = await bcrypt.genSalt(10);
+    req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
+    user.password = req.body.newPassword;
+
     await user.save();
     await token.delete();
-    res.status(200).json({ message: "Password Reset Successfully!" });
+    res.status(200).json({ message: "Password Update Successfully!" });
   } catch (error) {
     res.status(500).json({ message: error });
+  }
+};
+exports.updatePassword = async (req, res) => {
+  try {
+    const strongPassword = new RegExp(
+      "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+    );
+    if (!strongPassword.test(req.body.newPassword.trim())) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long with one uppercase letter, one lowercase letter, one digit, and one special character !",
+      });
+    }
+    const user = await User.findOne({ email: req.email });
+    if (!user) {
+      return res.status(404).json({ message: "invalid link or expired!" });
+    }
+
+    const token = await Token.findOne({
+      userId: req.userId,
+    });
+
+    if (!token)
+      return res.status(404).json({ message: "invalid link or expired!" });
+    const salt = await bcrypt.genSalt(10);
+    req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
+    user.password = req.body.newPassword;
+
+    await user.save();
+    await token.delete();
+    res.status(200).json({ message: "Password Update Successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: error });
+  }
+};
+exports.resetPasswordEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found,Please Enter Registerd Email" });
+    }
+    let token = await Token.findOne({ userId: user._id });
+    if (!token) {
+      token = await new Token({
+        userId: user._id,
+        token: crypto.randomBytes(32).toString("hex"),
+      }).save();
+    }
+    const link = `http://localhost:3000/updatePassword/${token}`;
+    sendEmail(user.email, user.fullName, link);
+    return res
+      .status(200)
+      .json({ message: "ResetPassword Link Sent Successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error" });
   }
 };
 // --------------------------------------get-requests----------------------

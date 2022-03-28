@@ -1,10 +1,9 @@
 const nodemailer = require("nodemailer");
-const sendEmail = async (email, subject, text) => {
+require("dotenv").config();
+const hbs = require("nodemailer-express-handlebars");
+const path = require("path");
+const sendEmail = async (email, name, link) => {
   try {
-    let ob = {
-      user: process.env.USER,
-      pass: process.env.PASS,
-    };
     // console.log(typeof );
     const transporter = nodemailer.createTransport({
       // host: process.env.HOST,
@@ -12,20 +11,40 @@ const sendEmail = async (email, subject, text) => {
       // port: 587,
       // secure: true ,
       auth: {
-        user: process.env.USER,
-        pass: process.env.PASS,
+        user: "jenishchopda.dds@gmail.com",
+        pass: "Vamp@2510",
       },
     });
-    await transporter.sendMail({
-      from: process.env.USER,
-      to: email,
-      subject: subject,
-      text: text,
+    const handlebarOptions = {
+      viewEngine: {
+        partialsDir: path.resolve("./views"),
+        defaultLayout: false,
+      },
+      viewPath: path.resolve("./views"),
+    };
+    transporter.use("compile", hbs(handlebarOptions));
+    var mailDetails = {
+      from: process.env.USER, // sender address
+      to: email, // list of receivers
+      subject: "Welcome!",
+      template: "email", // the name of the template file i.e email.handlebars
+      context: {
+        name: name, // replace {{name}} with Adebola
+        link: link, // replace {{company}} with My Company
+      },
+    };
+    console.log("Hello");
+
+    transporter.sendMail(mailDetails, function (error, result) {
+      if (error) {
+        return error;
+      } else {
+        return result;
+      }
     });
-    console.log("email sent successfully!");
   } catch (error) {
-    console.log(error, "email not found : ");
+    return error;
   }
 };
 
-module.exports = sendEmail;
+module.exports = { sendEmail };

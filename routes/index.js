@@ -12,5 +12,7 @@ module.exports = (app) => {
   app.post("/user/accountInfo", verifyToken, User.accountInfo);
   app.post("/user/changePassword", verifyToken, User.changePassword);
   app.post("/user/forgotPassword", verifyToken, User.passwordReset);
-  app.post("/:userId/:token", User.setNewPassword);
+  app.post("/user/resetPassword/:userId", verifyToken, User.setNewPassword);
+  app.post("/user/resetPasswordEmail", User.resetPasswordEmail);
+  app.post("/user/updatePassword", User.updatePassword);
 };
