@@ -93,6 +93,7 @@ exports.profileInfo = async (req, res) => {
       birthdate,
       gender,
       country,
+      state,
       city,
     } = req.body;
     let date = birthdate;
@@ -136,6 +137,7 @@ exports.profileInfo = async (req, res) => {
       user.gender = gender;
       user.country = country;
       user.city = city;
+      user.state = state;
       await user.save();
       return res
         .status(200)
@@ -325,39 +327,7 @@ exports.setNewPassword = async (req, res) => {
     res.status(500).json({ message: error });
   }
 };
-exports.updatePassword = async (req, res) => {
-  try {
-    const strongPassword = new RegExp(
-      "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
-    );
-    if (!strongPassword.test(req.body.newPassword.trim())) {
-      return res.status(400).json({
-        message:
-          "Password must be at least 8 characters long with one uppercase letter, one lowercase letter, one digit, and one special character !",
-      });
-    }
-    const user = await User.findOne({ email: req.email });
-    if (!user) {
-      return res.status(404).json({ message: "invalid link or expired!" });
-    }
 
-    const token = await Token.findOne({
-      userId: req.userId,
-    });
-
-    if (!token)
-      return res.status(404).json({ message: "invalid link or expired!" });
-    const salt = await bcrypt.genSalt(10);
-    req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
-    user.password = req.body.newPassword;
-
-    await user.save();
-    await token.delete();
-    res.status(200).json({ message: "Password Update Successfully!" });
-  } catch (error) {
-    res.status(500).json({ message: error });
-  }
-};
 exports.resetPasswordEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -374,13 +344,46 @@ exports.resetPasswordEmail = async (req, res) => {
         token: crypto.randomBytes(32).toString("hex"),
       }).save();
     }
-    const link = `http://localhost:3000/updatePassword/${token}`;
+    const link = `http://localhost:3000/updatePassword/${token.userId}`;
     sendEmail(user.email, user.fullName, link);
     return res
       .status(200)
       .json({ message: "ResetPassword Link Sent Successfully!" });
   } catch (error) {
     res.status(500).json({ message: "Error" });
+  }
+};
+exports.updatePassword = async (req, res) => {
+  try {
+    const strongPassword = new RegExp(
+      "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})"
+    );
+    if (!strongPassword.test(req.body.newPassword.trim())) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long with one uppercase letter, one lowercase letter, one digit, and one special character !",
+      });
+    }
+    const user = await User.findById(req.body.userId);
+    if (!user) {
+      return res.status(404).json({ message: "invalid link or expired!" });
+    }
+
+    const token = await Token.findOne({
+      userId: req.body.userId,
+    });
+
+    if (!token)
+      return res.status(404).json({ message: "invalid link or expired!" });
+    const salt = await bcrypt.genSalt(10);
+    req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
+    user.password = req.body.newPassword;
+
+    await user.save();
+    await token.delete();
+    res.status(200).json({ message: "Password Update Successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: error });
   }
 };
 // --------------------------------------get-requests----------------------

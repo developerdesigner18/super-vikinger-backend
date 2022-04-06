@@ -12,7 +12,7 @@ const sendEmail = async (email, name, link) => {
       // secure: true ,
       auth: {
         user: "jenishchopda.dds@gmail.com",
-        pass: "Vamp@2510",
+        pass: "Vamp@25120",
       },
     });
     const handlebarOptions = {
@@ -33,12 +33,13 @@ const sendEmail = async (email, name, link) => {
         link: link, // replace {{company}} with My Company
       },
     };
-    console.log("Hello");
 
     transporter.sendMail(mailDetails, function (error, result) {
       if (error) {
+        // console.log(error);
         return error;
       } else {
+        // console.log(result);
         return result;
       }
     });
