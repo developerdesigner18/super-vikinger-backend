@@ -307,6 +307,7 @@ exports.setNewPassword = async (req, res) => {
     }
     const user = await User.findOne({ email: req.email });
     if (!user) {
+      console.log("Not User");
       return res.status(404).json({ message: "invalid link or expired!" });
     }
 
@@ -314,8 +315,11 @@ exports.setNewPassword = async (req, res) => {
       userId: req.userId,
     });
 
-    if (!token)
+    if (!token) {
+      console.log("Hello Not Token");
       return res.status(404).json({ message: "invalid link or expired!" });
+    }
+
     const salt = await bcrypt.genSalt(10);
     req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
     user.password = req.body.newPassword;
@@ -331,6 +335,7 @@ exports.setNewPassword = async (req, res) => {
 exports.resetPasswordEmail = async (req, res) => {
   try {
     const { email } = req.body;
+
     const user = await User.findOne({ email: email });
     if (!user) {
       return res
@@ -366,6 +371,7 @@ exports.updatePassword = async (req, res) => {
     }
     const user = await User.findById(req.body.userId);
     if (!user) {
+      console.log("Hello Not User");
       return res.status(404).json({ message: "invalid link or expired!" });
     }
 
@@ -373,8 +379,10 @@ exports.updatePassword = async (req, res) => {
       userId: req.body.userId,
     });
 
-    if (!token)
+    if (!token) {
+      console.log("Hello Not Token");
       return res.status(404).json({ message: "invalid link or expired!" });
+    }
     const salt = await bcrypt.genSalt(10);
     req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
     user.password = req.body.newPassword;
